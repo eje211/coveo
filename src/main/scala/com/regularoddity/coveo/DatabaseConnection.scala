@@ -35,6 +35,19 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
 
   val cities = TableQuery[Cities]
 
+  /**
+    * @deprecated
+    * This method is deprecated and does not provide a score. Use `getScore` instead.
+    *
+    * Prepares a database search for selecting `City` data from the database.
+    *
+    * @param coordinate The locations must be as close as possible to this point.
+    * @param location The location's name must be as similar as possible to this name.
+    * @param limit The maximum number of results returned we require.
+    * @param fuzzy Whether or not the string matching should be fuzzy. Defaults to `true`.
+    * @return A `Query` for the matching search.
+    */
+  @deprecated()
   def getQuery(coordinate: PGpoint, location: String, limit: Int, fuzzy: Boolean = true) =
     for (
       result <- cities.map(cities => (cities.id, distance(cities.location, coordinate)))
@@ -45,13 +58,37 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
       result._2
     }
 
-  //  def getCities(coordinate: PGpoint, location: String, limit: Int, fuzzy: Boolean = true) = {
-  //    val query = getQuery(coordinate, location, limit)
-  //    db.run(query.result)
-  //      .map(_.map(city => City(city._1, city._2, city._3, city._4, city._5, city._6)))
-  //  }
+  /**
+    * @deprecated
+    * This method is deprecated and does not provide a score. Use `getScore` instead.
+    *
+    * Return a `Future[City]` of data from the database based on the given parameters. The return value is consumable as
+    * an Akka `Future` and can be sent to an `Actor` as such.
+    *
+    * @param coordinate The locations must be as close as possible to this point.
+    * @param location The location's name must be as similar as possible to this name.
+    * @param limit The maximum number of results returned we require.
+    * @param fuzzy Whether or not the string matching should be fuzzy. Defaults to `true`.
+    * @return A `Future[City]` of the results based on the given parameters, consumable as an Akka future.
+    */
+  @deprecated()
+  def getCities(coordinate: PGpoint, location: String, limit: Int, fuzzy: Boolean) = {
+    val query = getQuery(coordinate, location, limit)
+    db.run(query.result)
+      .map(_.map(city => City(city._1, city._2, city._3, city._4, city._5, city._6, 0.0, 0.0)))
+  }
 
-  def getScore(coordinate: PGpoint, location: String, limit: Long, fuzzy: Boolean = true) = {
+  /**
+    * Return a `Future[City]` of data from the database based on the given parameters. The return value is consumable as
+    * an Akka `Future` and can be sent to an `Actor` as such.
+    *
+    * @param coordinate The locations must be as close as possible to this point.
+    * @param location The location's name must be as similar as possible to this name.
+    * @param limit The maximum number of results returned we require.
+    * @param fuzzy Whether or not the string matching should be fuzzy. Defaults to `true`.
+    * @return A `Future[City]` of the results based on the given parameters, consumable as an Akka future.
+    */
+  def getScore(coordinate: PGpoint, location: String, limit: Int, fuzzy: Boolean = true) = {
     val locationStr = s"%${if (fuzzy) fuzzyString(location) else location}%"
     val pointValue = s"(${coordinate.x},${coordinate.y})"
     val query = sql"""
@@ -97,8 +134,6 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
          |ORDER BY score DESC
          |LIMIT $limit::bigint """.stripMargin.as[City]
     db.run(query)
-    //    ran.failed.map(f => f.printStackTrace()).isCompleted
-    //    ran.map(c => c.map(println(_))).isCompleted
   }
 
 }
@@ -113,11 +148,3 @@ case class City(
   distance: Double,
   score: Double
 )
-
-/*
-
-Score search:
-
-
-
- */ 
