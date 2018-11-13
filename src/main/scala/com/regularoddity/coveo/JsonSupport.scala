@@ -1,9 +1,11 @@
 package com.regularoddity.coveo
 
-import com.regularoddity.coveo.CityProtocol.{ CitiesJsonFormat, CitiesObjJsonFormat }
+import com.regularoddity.coveo.CityProtocol.{CitiesJsonFormat, CitiesObjJsonFormat}
 import com.regularoddity.coveo.UserRegistryActor.ActionPerformed
-import org.postgresql.geometric.PGpoint
 import spray.json._
+import PGPoint._
+
+import scala.util.Try
 
 //#json-support
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -29,11 +31,13 @@ object CityProtocol extends DefaultJsonProtocol {
     def write(c: City) =
       JsObject(
         ("id", JsNumber(c.id)),
+        ("fullName", JsString(c.fullName)),
         ("name", JsString(c.name)),
         ("stateProvince", JsString(c.stateProvince)),
-        ("fullName", JsString(c.fullName)),
         ("countryCode", JsString(c.countryCode)),
-        ("location", JsArray(Vector(JsNumber(c.location.x), JsNumber(c.location.y))))
+        ("coordinates", JsArray(c.coordinates.toVector.map(JsNumber(_)))),
+        ("distance", JsNumber(c.distance)),
+        ("score", JsNumber(c.score)),
       )
 
     def read(value: JsValue) = value match {
@@ -44,9 +48,15 @@ object CityProtocol extends DefaultJsonProtocol {
           ("stateProvince", JsString(stateProvince)),
           ("fullName", JsString(fullName)),
           ("countryCode", JsString(countryCode)),
-          ("location", JsArray(Vector(JsNumber(location1), JsNumber(location2))))) =>
+          ("coordinates", JsArray(locationVector)),
+          ("distance", JsNumber(distance)),
+          ("score", JsNumber(score)),
+        ) => Try(
           new City(id.intValue(), name, stateProvince, fullName, countryCode,
-            new PGpoint(location1.doubleValue(), location2.doubleValue()))
+            locationVector.map(_.asInstanceOf[JsNumber].value.doubleValue()).toPointOpt.get,
+            distance.doubleValue(), score.doubleValue())).toOption.getOrElse(
+          deserializationError("Malformed data for city element.")
+        )
         case _ => deserializationError("City expected")
       }
       case _ => deserializationError("City expected")

@@ -27,7 +27,10 @@ trait PGPoint {
         stateProvince: String,
         fullName: String,
         countryCode: String,
-        location: PGpoint) => Some(City(id, name, stateProvince, fullName, countryCode, location))
+        location: PGpoint,
+        distance: Double,
+        score: Double
+        ) => Some(City(id, name, stateProvince, fullName, countryCode, location, distance, score))
     }
   }
 
@@ -79,13 +82,17 @@ object PGPoint {
    * @param s The `String` to transform. It must be in the form "float,float", for example "2.55,7.979" or "7,0.06".
    * @return The `PGpoint` wrapped in an `Option`, if one could be made.
    */
-  implicit def PointConverter(s: String): _PointConverter = new _PointConverter(s)
+  implicit def PointConverter(s: String) = new PointStringConverterFrom(s)
+
+  implicit def PointConverter(v: Vector[Double]) = new PointVectorConverterFrom(v)
+
+  implicit def PointConverter(p: PGpoint): PointConverterTo = new PointConverterTo(p)
 
   /**
    * The internal class that actual performs the conversion.
    * @param s The string to be converted into a  `PGpoint`.
    */
-  class _PointConverter(s: String) {
+  class PointStringConverterFrom(s: String) {
 
     /**
      * The method that performs the conversion from `String` to `PGpoint`.
@@ -96,6 +103,22 @@ object PGPoint {
         val parts = s.split(",").map(_.toDouble).toVector
         new PGpoint(parts(0), parts(1))
       }).toOption
+  }
+
+  class PointVectorConverterFrom(v: Vector[Double]) {
+
+    /**
+     * The method that performs the conversion from `String` to `PGpoint`.
+     * @return `Some[PGpoint]` if one could be made, or `None` otherwise.
+     */
+    def toPointOpt: Option[PGpoint] =
+      Try({
+        new PGpoint(v(0), v(1))
+      }).toOption
+  }
+
+  class PointConverterTo(p: PGpoint) {
+    def toVector = Vector(p.x, p.y)
   }
 
 }

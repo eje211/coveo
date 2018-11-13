@@ -45,11 +45,11 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
       result._2
     }
 
-  def getCities(coordinate: PGpoint, location: String, limit: Int, fuzzy: Boolean = true) = {
-    val query = getQuery(coordinate, location, limit)
-    db.run(query.result)
-      .map(_.map(city => City(city._1, city._2, city._3, city._4, city._5, city._6)))
-  }
+  //  def getCities(coordinate: PGpoint, location: String, limit: Int, fuzzy: Boolean = true) = {
+  //    val query = getQuery(coordinate, location, limit)
+  //    db.run(query.result)
+  //      .map(_.map(city => City(city._1, city._2, city._3, city._4, city._5, city._6)))
+  //  }
 
   def getScore(coordinate: PGpoint, location: String, limit: Long, fuzzy: Boolean = true) = {
     val locationStr = s"%${if (fuzzy) fuzzyString(location) else location}%"
@@ -58,15 +58,15 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
          |SELECT
          |  cities_v.id,
          |  name,
-         |  full_name,
          |  state_province,
+         |  full_name,
          |  country_code,
          |  location,
          |  distance,
-         |  |/ (log((m.max_score + 1.5)::numeric,
-         |    (m.max_score - ls.lscore + 1.5)::numeric) *
-         |  log((m.max_distance + 1.5)::numeric,
-         |    (m.max_distance - ls.distance + 1.5)::numeric)) as score
+         |  log((m.max_score + 2 - (m.min_score * 0.99))::numeric,
+         |    (m.max_score + 2 - lat_data.score)::numeric) *
+         |  log((m.max_distance + 2 - (m.min_distance * 0.99))::numeric,
+         |    (m.max_distance + 2 - lat_data.distance)::numeric) as score
          |FROM
          |  cities_v
          |JOIN (
@@ -78,7 +78,7 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
          |  FROM
          |    cities_v
          |  WHERE
-         |    full_name LIKE $locationStr
+         |    full_name ILIKE $locationStr
          |  GROUP BY
          |    TRUE
          |  ) AS m
@@ -86,20 +86,19 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
          |JOIN LATERAL (
          |  SELECT
          |    id,
-         |    levenshtein(full_name, $locationStr) AS lscore,
+         |    levenshtein(full_name, $locationStr) AS score,
          |    $pointValue::point <-> location as distance
          |  FROM
          |    cities_v
-         |  ) AS ls
-         |  ON ls.id = cities_v.id
+         |  ) AS lat_data
+         |  ON lat_data.id = cities_v.id
          |WHERE
-         |  full_name LIKE $locationStr
+         |  full_name ILIKE $locationStr
          |ORDER BY score DESC
          |LIMIT $limit::bigint """.stripMargin.as[City]
-    println("About to run...")
     db.run(query)
-//    ran.failed.map(f => f.printStackTrace()).isCompleted
-//    ran.map(c => c.map(println(_))).isCompleted
+    //    ran.failed.map(f => f.printStackTrace()).isCompleted
+    //    ran.map(c => c.map(println(_))).isCompleted
   }
 
 }
@@ -110,9 +109,9 @@ case class City(
   stateProvince: String,
   fullName: String,
   countryCode: String,
-  location: PGpoint,
-  distance: Double = 0.0,
-  score: Double = 0.0
+  coordinates: PGpoint,
+  distance: Double,
+  score: Double
 )
 
 /*

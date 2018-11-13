@@ -32,7 +32,8 @@ class CityRegistryActor extends Actor with ActorLogging {
 
   def receive: Receive = {
     case GetCities(startLocation: PGpoint, locationName: String, limit: Int, fuzzy: Boolean) =>
-      DatabaseConnection.getCities(startLocation, locationName, limit, fuzzy) pipeTo sender()
+      // DatabaseConnection.getCities(startLocation, locationName, limit, fuzzy) pipeTo sender()
+      DatabaseConnection.getScore(startLocation, locationName, limit, fuzzy) pipeTo sender()
     //      }
     //    case CreateUser(user) =>
     //      users += user
