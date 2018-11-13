@@ -1,9 +1,12 @@
 package com.regularoddity.coveo
 
 import org.postgresql.geometric.PGpoint
+import slick.driver
+import slick.jdbc.{ GetResult, PositionedParameters, SetParameter }
 
 object DatabaseConnection extends DatabaseHelpers with PGPoint {
   import slick.jdbc.PostgresProfile.api._
+  import PGPoint._
 
   implicit val ExecutionContext = QuickstartServer.system.dispatcher
 
@@ -23,6 +26,13 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
     def * = (id, name, stateProvince, fullName, countryCode, location)
   }
 
+  implicit val cityResult = GetResult[City](r => {
+    City(
+      r.nextInt(), r.nextString(), r.nextString(), r.nextString(), r.nextString(),
+      r.nextString().dropRight(1).drop(1).toPointOpt.get, r.nextDouble(), r.nextDouble()
+    )
+  })
+
   val cities = TableQuery[Cities]
 
   def getQuery(coordinate: PGpoint, location: String, limit: Int, fuzzy: Boolean = true) =
@@ -41,6 +51,57 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
       .map(_.map(city => City(city._1, city._2, city._3, city._4, city._5, city._6)))
   }
 
+  def getScore(coordinate: PGpoint, location: String, limit: Long, fuzzy: Boolean = true) = {
+    val locationStr = s"%${if (fuzzy) fuzzyString(location) else location}%"
+    val pointValue = s"(${coordinate.x},${coordinate.y})"
+    val query = sql"""
+         |SELECT
+         |  cities_v.id,
+         |  name,
+         |  full_name,
+         |  state_province,
+         |  country_code,
+         |  location,
+         |  distance,
+         |  |/ (log((m.max_score + 1.5)::numeric,
+         |    (m.max_score - ls.lscore + 1.5)::numeric) *
+         |  log((m.max_distance + 1.5)::numeric,
+         |    (m.max_distance - ls.distance + 1.5)::numeric)) as score
+         |FROM
+         |  cities_v
+         |JOIN (
+         |  SELECT
+         |    MAX(levenshtein(full_name, $locationStr)) AS max_score,
+         |    MIN(levenshtein(full_name, $locationStr)) as min_score,
+         |    MIN($pointValue::point <-> location) as min_distance,
+         |    MAX($pointValue::point <-> location) as max_distance
+         |  FROM
+         |    cities_v
+         |  WHERE
+         |    full_name LIKE $locationStr
+         |  GROUP BY
+         |    TRUE
+         |  ) AS m
+         |  ON TRUE
+         |JOIN LATERAL (
+         |  SELECT
+         |    id,
+         |    levenshtein(full_name, $locationStr) AS lscore,
+         |    $pointValue::point <-> location as distance
+         |  FROM
+         |    cities_v
+         |  ) AS ls
+         |  ON ls.id = cities_v.id
+         |WHERE
+         |  full_name LIKE $locationStr
+         |ORDER BY score DESC
+         |LIMIT $limit::bigint """.stripMargin.as[City]
+    println("About to run...")
+    db.run(query)
+//    ran.failed.map(f => f.printStackTrace()).isCompleted
+//    ran.map(c => c.map(println(_))).isCompleted
+  }
+
 }
 
 case class City(
@@ -49,36 +110,15 @@ case class City(
   stateProvince: String,
   fullName: String,
   countryCode: String,
-  location: PGpoint
+  location: PGpoint,
+  distance: Double = 0.0,
+  score: Double = 0.0
 )
 
 /*
 
 Score search:
 
-SELECT
-  full_name,
-  ls.lscore,
-  m.maxscore
-FROM
-  cities_v
-JOIN (
-  SELECT
-    MAX(levenshtein(full_name, 'ville')) AS maxscore
-  FROM
-    cities_v
-  GROUP BY
-    TRUE
-  ) AS m
-  ON TRUE
-JOIN LATERAL (
-  SELECT
-    id, levenshtein(full_name, 'ville') AS lscore
-  FROM
-    cities_v
-  ) AS ls
-  ON ls.id = cities_v.id
-ORDER BY ls.lscore
-LIMIT 10;
 
- */
+
+ */ 
