@@ -1,8 +1,7 @@
 package com.regularoddity.coveo
 
 import org.postgresql.geometric.PGpoint
-import slick.driver
-import slick.jdbc.{ GetResult, PositionedParameters, SetParameter }
+import slick.jdbc.GetResult
 
 object DatabaseConnection extends DatabaseHelpers with PGPoint {
   import slick.jdbc.PostgresProfile.api._

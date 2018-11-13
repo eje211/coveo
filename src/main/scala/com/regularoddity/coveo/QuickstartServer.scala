@@ -7,7 +7,6 @@ import akka.actor.{ ActorRef, ActorSystem }
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import org.postgresql.geometric.PGpoint
 
 //#main-class
 
