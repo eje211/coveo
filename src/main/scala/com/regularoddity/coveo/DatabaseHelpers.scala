@@ -5,7 +5,7 @@ import slick.lifted.SimpleExpression
 import slick.jdbc.PostgresProfile.api._
 
 trait DatabaseHelpers {
-  def fuzzyString(s: String): String = s"%${s.split("").mkString("%")}%"
+  def fuzzyString(s: String): String = s"${s.split("").mkString("%")}"
 
   val distance = SimpleExpression.binary[PGpoint, PGpoint, Double] {
     (point1, point2, queryBuilder) =>

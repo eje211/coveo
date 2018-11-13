@@ -46,8 +46,6 @@ object QuickstartServer extends App {
   lazy val routes: Route = concat(CityRoute.routes, UserRoute.routes)
   //#main-class
 
-  DatabaseConnection.get(new PGpoint(-85.3787763, 35.0982149), "ville", 10)
-
   //#http-server
   Http().bindAndHandle(routes, "localhost", 8080)
 

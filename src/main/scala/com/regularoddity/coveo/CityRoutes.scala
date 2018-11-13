@@ -9,8 +9,9 @@ import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.pattern.ask
 import akka.util.Timeout
 import com.regularoddity.coveo.CityRegistryActor.GetCities
+import org.postgresql.geometric.PGpoint
+import PGPoint._
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 //#user-routes-class
@@ -38,9 +39,12 @@ trait CityRoutes extends JsonSupport {
         pathEnd {
           concat(
             get {
-              val cities: Future[Cities] =
-                (cityRegistryActor ? GetCities).mapTo[Cities]
-              complete(cities)
+              parameter("startPoint", "locationName", "limit" ? 10, "fuzzy" ? true) {
+                (startPointParam, locationName, limit, fuzzy) =>
+                  complete(startPointParam.toPointOpt.map((startPoint: PGpoint) => {
+                    (cityRegistryActor ? GetCities(startPoint, locationName, limit, fuzzy)).mapTo[Seq[City]]
+                  }))
+              }
             } //,
           //            post {
           //              entity(as[User]) { user =>

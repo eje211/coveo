@@ -1,7 +1,6 @@
 package com.regularoddity.coveo
 
 import com.regularoddity.coveo.CityProtocol.{ CitiesJsonFormat, CitiesObjJsonFormat }
-import com.regularoddity.coveo.DatabaseConnection.City
 import com.regularoddity.coveo.UserRegistryActor.ActionPerformed
 import org.postgresql.geometric.PGpoint
 import spray.json._
@@ -26,7 +25,7 @@ trait JsonSupport extends SprayJsonSupport {
 
 object CityProtocol extends DefaultJsonProtocol {
 
-  implicit object CityJsonFormat extends RootJsonFormat[DatabaseConnection.City] {
+  implicit object CityJsonFormat extends RootJsonFormat[City] {
     def write(c: City) =
       JsObject(
         ("id", JsNumber(c.id)),
