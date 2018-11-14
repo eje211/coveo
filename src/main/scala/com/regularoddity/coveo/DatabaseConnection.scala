@@ -13,6 +13,9 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
 
   val db = Database.forURL("jdbc:postgresql://localhost/coveo", driver = "org.postgresql.Driver")
 
+  /**
+    * A representation of the type of the table `cities_v` in the database.
+    */
   class Cities(tag: Tag) extends Table[(Long, String, String, String, String, PGpoint)](tag, "cities_v") {
 
     def id = column[Long]("id", O.PrimaryKey)
@@ -25,6 +28,14 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
     def * = (id, name, stateProvince, fullName, countryCode, location)
   }
 
+  /**
+    * A representation of the `cities_v` table in the database.
+    */
+  val cities = TableQuery[Cities]
+
+  /**
+    * Convert a `PositionedResult` to a [[City]] object.
+    */
   implicit val cityResult = GetResult[City](r => {
     City(
       r.nextInt(), r.nextString(), r.nextString(), r.nextString(), r.nextString(),
@@ -32,13 +43,11 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
     )
   })
 
-  val cities = TableQuery[Cities]
-
   /**
     * @deprecated
-    * This method is deprecated and does not provide a score. Use `getScore` instead.
+    * This method is deprecated and does not provide a score. Use [[getScore]] instead.
     *
-    * Prepares a database search for selecting `City` data from the database.
+    * Prepares a database search for selecting [[City]] data from the database.
     *
     * @param coordinate The locations must be as close as possible to this point.
     * @param location The location's name must be as similar as possible to this name.
@@ -59,16 +68,17 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
 
   /**
     * @deprecated
-    * This method is deprecated and does not provide a score. Use `getScore` instead.
+    * This method is deprecated and does not provide a score. Use [[getScore]] instead.
     *
-    * Return a `Future[City]` of data from the database based on the given parameters. The return value is consumable as
-    * an Akka `Future` and can be sent to an `Actor` as such.
+    * Return a `Future[ [[City]] ]` objects from the database based on the given parameters. The
+    * return value is consumable as an Akka `Future` and can be sent to an `Actor` as such.
     *
     * @param coordinate The locations must be as close as possible to this point.
     * @param location The location's name must be as similar as possible to this name.
     * @param limit The maximum number of results returned we require.
     * @param fuzzy Whether or not the string matching should be fuzzy. Defaults to `true`.
-    * @return A `Future[City]` of the results based on the given parameters, consumable as an Akka future.
+    * @return a `Future[City]` objects for the results based on the given parameters,
+    *         consumable as an Akka future.
     */
   @deprecated()
   def getCities(coordinate: PGpoint, location: String, limit: Int, fuzzy: Boolean) = {
@@ -78,14 +88,15 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
   }
 
   /**
-    * Return a `Future[City]` of data from the database based on the given parameters. The return value is consumable as
-    * an Akka `Future` and can be sent to an `Actor` as such.
+    * Return a `Future[City]` objects from the database based on the given parameters. The
+    * return value is consumable as an Akka `Future` and can be sent to an `Actor` as such.
     *
     * @param coordinate The locations must be as close as possible to this point.
     * @param location The location's name must be as similar as possible to this name.
     * @param limit The maximum number of results returned we require.
     * @param fuzzy Whether or not the string matching should be fuzzy. Defaults to `true`.
-    * @return A `Future[City]` of the results based on the given parameters, consumable as an Akka future.
+    * @return a `Future[City]` of objects for the results based on the given parameters,
+    *         consumable as an Akka future.
     */
   def getScore(coordinate: PGpoint, location: String, limit: Int, fuzzy: Boolean = true) = {
     val locationStr = s"%${if (fuzzy) fuzzyString(location) else location}%"
@@ -137,6 +148,21 @@ object DatabaseConnection extends DatabaseHelpers with PGPoint {
 
 }
 
+/**
+  * A representation a result row from the `cities_v` table of the database.
+  *
+  * A result's score depends on the location name's similarity to the search name, its coordinate's proximity to the
+  * given search location, and both are measured in relation to the other results in the set.
+  *
+  * @param id The ID of the location.
+  * @param name The individual name of the location.
+  * @param stateProvince The two-letter code for the state or province of the location.
+  * @param fullName The name of the location, combined with its state or province's name.
+  * @param countryCode The two-letter code of the location's country.
+  * @param coordinates The geographical coordinates of the location.
+  * @param distance The distance between the location and the `coordinate` search term.
+  * @param score The proportional score for this result, between 0 and 1, 1 being a better match.
+  */
 case class City(
   id: Long,
   name: String,

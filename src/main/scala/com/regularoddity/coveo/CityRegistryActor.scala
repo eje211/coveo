@@ -13,7 +13,17 @@ final case class Cities(cities: Seq[City])
 
 object CityRegistryActor {
   final case class ActionPerformed(description: String)
-  final case class GetCities(startPoint: PGpoint, locationName: String, limit: Int = 10, fuzzy: Boolean = true)
+
+  /**
+    * Send a message to the [[CityRegistryActor]] to query [[City]] objects from the database based on the given
+    * parameters.
+    *
+    * @param coordinate The locations must be as close as possible to this point.
+    * @param location The location's name must be as similar as possible to this name.
+    * @param limit The maximum number of results returned we require.
+    * @param fuzzy Whether or not the string matching should be fuzzy. Defaults to `true`.
+    */
+  final case class GetCities(coordinate: PGpoint, location: String, limit: Int = 10, fuzzy: Boolean = true)
   final case class CreateUser(user: User)
   final case class GetUser(name: String)
   final case class DeleteUser(name: String)
@@ -32,7 +42,6 @@ class CityRegistryActor extends Actor with ActorLogging {
 
   def receive: Receive = {
     case GetCities(startLocation: PGpoint, locationName: String, limit: Int, fuzzy: Boolean) =>
-      // DatabaseConnection.getCities(startLocation, locationName, limit, fuzzy) pipeTo sender()
       DatabaseConnection.getScore(startLocation, locationName, limit, fuzzy) pipeTo sender()
     //      }
     //    case CreateUser(user) =>
