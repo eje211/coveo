@@ -1,7 +1,6 @@
 package com.regularoddity.coveo
 
 import com.regularoddity.coveo.CityProtocol.{CitiesJsonFormat, CitiesObjJsonFormat}
-import com.regularoddity.coveo.UserRegistryActor.ActionPerformed
 import spray.json._
 import PGPoint._
 
@@ -15,11 +14,6 @@ import spray.json.DefaultJsonProtocol
   * Add support for implicitly converting between JSON and known types in Spray.
   */
 trait JsonSupport extends SprayJsonSupport {
-  // import the default encoders for primitive types (Int, String, Lists etc)
-  import DefaultJsonProtocol._
-
-  implicit val userJsonFormat = jsonFormat3(User)
-  implicit val usersJsonFormat = jsonFormat1(Users)
   /**
     * Implicitly import the methods for converting between JSON and [[City]].
     */
@@ -32,8 +26,6 @@ trait JsonSupport extends SprayJsonSupport {
     * Implicitly import the methods for converting between JSON and [[Cities]].
     */
   implicit val citiesObjJsonFormat = CitiesObjJsonFormat
-
-  implicit val actionPerformedJsonFormat = jsonFormat1(ActionPerformed)
 }
 //#json-support
 

@@ -14,28 +14,20 @@ import PGPoint._
 
 import scala.concurrent.duration._
 
-//#user-routes-class
 trait CityRoutes extends JsonSupport {
-  //#user-routes-class
 
   // we leave these abstract, since they will be provided by the App
   implicit def system: ActorSystem
 
-  lazy val log = Logging(system, classOf[UserRoutes])
+  lazy val log = Logging(system, classOf[CityRoutes])
 
-  // other dependencies that UserRoutes use
   def cityRegistryActor: ActorRef
 
-  // Required by the `ask` (?) method below
   implicit lazy val timeout = Timeout(5.seconds) // usually we'd obtain the timeout from the system's configuration
 
-  //#all-routes
-  //#users-get-post
-  //#users-get-delete   
   lazy val cityRoutes: Route =
     pathPrefix("suggestions") {
       concat(
-        //#users-get-delete
         pathEnd {
           concat(
             get {
@@ -84,7 +76,5 @@ trait CityRoutes extends JsonSupport {
           )
         }
       )
-      //#users-get-delete
     }
-  //#all-routes
 }

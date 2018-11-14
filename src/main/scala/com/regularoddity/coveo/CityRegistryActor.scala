@@ -1,15 +1,11 @@
 package com.regularoddity.coveo
 
-//#user-registry-actor
 import akka.actor.{ Actor, ActorLogging, Props }
 import akka.util.Timeout
 import org.postgresql.geometric.PGpoint
 
 import scala.concurrent.ExecutionContext
-//#user-case-classes
-// final case class User(name: String, age: Int, countryOfResidence: String)
 final case class Cities(cities: Seq[City])
-//#user-case-classes
 
 object CityRegistryActor {
   final case class ActionPerformed(description: String)
@@ -24,9 +20,6 @@ object CityRegistryActor {
     * @param fuzzy Whether or not the string matching should be fuzzy. Defaults to `true`.
     */
   final case class GetCities(coordinate: PGpoint, location: String, limit: Int = 10, fuzzy: Boolean = true)
-  final case class CreateUser(user: User)
-  final case class GetUser(name: String)
-  final case class DeleteUser(name: String)
 
   def props: Props = Props[CityRegistryActor]
 }
@@ -54,4 +47,3 @@ class CityRegistryActor extends Actor with ActorLogging {
     //      sender() ! ActionPerformed(s"User ${name} deleted.")
   }
 }
-//#user-registry-actor
