@@ -1,6 +1,48 @@
 
 
-## Score
+# Platform
+
+The easiest platform would have been Tornado. Tornado would have worked perfectly and would have taken a tenth of the
+time to develop. However, after telling the team that, if it were up to me, I'd use Scala more often and that I only
+resort to Python when I need to take to take other people's skill into account, that felt rather hypocritical. The
+easiest framework for me to use in Scala would have been Lift, which has excellent REST support, but Lift doesn't scale
+very well. Next is Play. Play would work but is really meant for websites, not for services. The Akka product for
+services is Akka HTTP. I thought that Akka HTTP could not be very complicated, compared to Play, so I picked that. And
+I was right. It is not very complicated. But it was still some extra software to learn. Still, to its credit, the Akka
+documentation is very good.
+
+# Database
+
+There were several reasons why PostgreSQL was my database of choice here. If better geographical accuracy were
+necessary, PostGIS would be one, but even before that, its native use of geometric types is already a reason, its
+ability to calculate string distances internally is another and its powerful table views are yet another. One of the
+reasons why I used table views is that they allow me to keep the give TSV exactly as-is. In case the data needs to be
+updated (this is not going to happen here, but it could very well happen in real life), no new could would be necessary.
+The format of the data is standardized. That means that the format of the TSV file is standardized and that the new file
+will fit the existing table. The replacing the data in the existing table will also update its corresponding view. I
+trust that the caching will make that conversion efficient: none of that data ever changes and Postgres is known for its
+efficiency.
+
+# ORM
+
+I made the most mistakes in my ORM selection. I first selected Squeryl that plain did not work. Then, I tried
+sacalikejdbc, that I did get to work but that posed a huge problem. It is synchronous. That means I could not call it
+form an actor. One of the rules of an actor is that it cannot communicate with the rest of the application except
+through messages or by calling pure functions. Making a synchronous query to a database from inside an actor cannot be
+an acceptable practice.
+
+That's when I switched to Slick. I really should have thought of that in the first place. Slick is not very
+difficult to use but its documentation is, in my opinion, terrible. It's one of these cases, far too common in
+software were the documentation seems to be made for people who already know the software perfectly to confirm what
+they already know. Once I'd figured something out, I could verify that it was indeed in the documentation, but I was
+never able to find it there until I already knew what it was. There was a lot of digging through the source code and a
+lot of searching through StackOverflow. Again, this is not a criticism of Slick, which is, as far as I can tell,
+fantastic, just of the way it's documented.
+
+Slick, rather than returning data structures, returns futures, which can then be consumed asynchronously by Akka actors.
+That means that they can be safely called by actors, solving the problem posed by other ORMs.
+
+# Score
 
 For the score, the main goal was to remember that the end consumer of the score would be people, not machines.
 I remember being at a conference, Indiecade, and hearing about how mathematical accuracy does not always work wih
