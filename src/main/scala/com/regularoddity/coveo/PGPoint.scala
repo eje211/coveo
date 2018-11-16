@@ -11,10 +11,9 @@ import slick.util.ConstArray
 import scala.reflect.ClassTag
 import scala.util.Try
 
-
 /**
-  * The implicits necessary for extracting data of type `PGpoint` from the database using Slick's DSL.
-  */
+ * The implicits necessary for extracting data of type `PGpoint` from the database using Slick's DSL.
+ */
 trait PGPoint {
   implicit object GetPGPoint extends GetResult[PGpoint] {
     def apply(rs: PositionedResult) = {
@@ -78,7 +77,6 @@ trait PGPoint {
 
 }
 
-
 object PGPoint {
 
   /**
@@ -91,18 +89,17 @@ object PGPoint {
   implicit def PointConverter(s: String) = new PointStringConverterFrom(s)
 
   /**
-    * Implicitly transform a `Vector[Double]` into a `PGpoint`, if possible.
-    * This called with the implicit method [[PointStringConverterFrom.toPointOpt]].
-    *
-    * @param s The `Vector[Double]` to transform.
-    * @return The `PGpoint` wrapped in an `Option`, if one could be made.
-    */
+   * Implicitly transform a `Vector[Double]` into a `PGpoint`, if possible.
+   * This called with the implicit method [[PointStringConverterFrom.toPointOpt]].
+   *
+   * @param s The `Vector[Double]` to transform.
+   * @return The `PGpoint` wrapped in an `Option`, if one could be made.
+   */
   implicit def PointConverter(v: Vector[Double]) = new PointVectorConverterFrom(v)
 
-
   /**
-    * Implicitly convert a `PGpoint` to other formats.
-    */
+   * Implicitly convert a `PGpoint` to other formats.
+   */
   implicit def PointConverter(p: PGpoint): PointConverterTo = new PointConverterTo(p)
 
   /**
@@ -123,9 +120,9 @@ object PGPoint {
   }
 
   /**
-    * Make an object that can transform a `Vector[Double]` into a `PGpoint`, if possible.
-    * @param s The string to be converted into a `PGpoint`.
-    */
+   * Make an object that can transform a `Vector[Double]` into a `PGpoint`, if possible.
+   * @param s The string to be converted into a `PGpoint`.
+   */
   class PointVectorConverterFrom(v: Vector[Double]) {
 
     /**
@@ -138,17 +135,17 @@ object PGPoint {
       }).toOption
   }
   /**
-    * Make an object that can a `PGpoint` into other types.
-    * @param s The string to be converted into a `PGpoint`.
-    */
+   * Make an object that can a `PGpoint` into other types.
+   * @param s The string to be converted into a `PGpoint`.
+   */
 
   class PointConverterTo(p: PGpoint) {
     /**
-      * Covert the `PGpoint` to a `Vector[Double]`.
-      * For example `new PGpoint(2.0, 3.0)` would become `Vector(2.0, 3.0)`.
-      *
-      * @return The values inside the `PGpoint` as a `Vector[Double]`.
-      */
+     * Covert the `PGpoint` to a `Vector[Double]`.
+     * For example `new PGpoint(2.0, 3.0)` would become `Vector(2.0, 3.0)`.
+     *
+     * @return The values inside the `PGpoint` as a `Vector[Double]`.
+     */
     def toVector = Vector(p.x, p.y)
   }
 

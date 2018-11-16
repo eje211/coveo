@@ -16,6 +16,7 @@ lazy val root = (project in file(".")).
       "postgresql"         %  "postgresql"           % "9.1-901-1.jdbc4",
       "com.typesafe.slick" %% "slick"                % "3.2.3",
       "org.slf4j"          %  "slf4j-nop"            % "1.6.4",
+      "net.codingwell"     %% "scala-guice"          % "4.2.1",
 
       "com.typesafe.akka" %% "akka-http-testkit"    % akkaHttpVersion % Test,
       "com.typesafe.akka" %% "akka-testkit"         % akkaVersion     % Test,

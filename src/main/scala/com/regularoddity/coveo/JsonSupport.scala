@@ -1,12 +1,11 @@
 package com.regularoddity.coveo
 
-import com.regularoddity.coveo.CityProtocol.{CitiesJsonFormat, CitiesObjJsonFormat}
+import com.regularoddity.coveo.CityProtocol.{CityJsonFormat, CitiesJsonFormat}
 import spray.json._
 import PGPoint._
 
 import scala.util.Try
 
-//#json-support
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.DefaultJsonProtocol
 
@@ -17,18 +16,12 @@ trait JsonSupport extends SprayJsonSupport {
   /**
     * Implicitly import the methods for converting between JSON and [[City]].
     */
-  implicit val cityJsonFormat = CityProtocol
+  implicit val cityJsonFormat = CityJsonFormat
   /**
     * Implicitly import the methods for converting between JSON and `Seq[City]`.
     */
   implicit val citiesJsonFormat = CitiesJsonFormat
-  /**
-    * Implicitly import the methods for converting between JSON and [[Cities]].
-    */
-  implicit val citiesObjJsonFormat = CitiesObjJsonFormat
 }
-//#json-support
-
 
 /**
   * The implementation of the Slick conversations between JSON and various types related to [[City]].
@@ -108,26 +101,4 @@ object CityProtocol extends DefaultJsonProtocol {
     }
   }
 
-  /**
-    * The Slick protocol to converting between JSON and [[Cities]].
-    */
-  implicit object CitiesObjJsonFormat extends RootJsonFormat[Cities] {    /**
-    * Convert from [[Cities]] to JSON.
-    * @param c The [[Cities]] object to convert.
-    * @return a JSON representation of the given [[Cities]] object.
-    */
-    def write(c: Cities) =
-      CitiesJsonFormat.write(c.cities)
-
-    /**
-      * Convert from JSON to [[Cities]].
-      * @param c The JSON object to convert.
-      * @return a [[Cities]] representation of the given JSON object.
-      */
-    def read(value: JsValue): Cities = value match {
-      case cities: JsArray =>
-        Cities(CitiesJsonFormat.read(cities))
-      case _ => deserializationError("City expected")
-    }
-  }
 }
