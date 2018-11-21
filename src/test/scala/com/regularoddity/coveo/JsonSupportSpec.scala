@@ -23,20 +23,20 @@ class JsonSupportSpec extends FlatSpec with Matchers with JsonSupport with Defau
   }
   "A City object" should "be castable to JSON" in {
     val json = cityJsonFormat.write(testCity)
-    json.fields.toSet should contain allElementsOf (cityFields)
+    json.fields.toSet should contain allElementsOf cityFields
   }
   "A properly formatted JSON object" should "be cast to Seq of City objects if possible" in {
     val json = new JsArray(Vector(new JsObject(Map(cityFields: _*)), new JsObject(Map(cityFields: _*)),
       new JsObject(Map(cityFields: _*))))
     val cities = citiesJsonFormat.read(json)
-    cities shouldBe a[Seq[_]]
+    cities shouldBe a [Seq[_]]
     cities should contain(testCity)
-    cities should have length (3)
+    cities should have length 3
   }
   "A Seq of City objects" should "be castable to JSON" in {
     val json = citiesJsonFormat.write(Seq(testCity, testCity, testCity))
     json shouldBe a[JsArray]
     json.elements should contain(new JsObject(Map(cityFields: _*)))
-    json.elements should have length (3)
+    json.elements should have length 3
   }
 }
