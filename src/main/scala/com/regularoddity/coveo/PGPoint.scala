@@ -147,6 +147,12 @@ object PGPoint {
      * @return The values inside the `PGpoint` as a `Vector[Double]`.
      */
     def toVector = Vector(p.x, p.y)
+
+    /**
+     * The absoulet value of the vector.
+     * @return the absolute value of the vector.
+     */
+    def abs = scala.math.sqrt(p.x * p.x + p.y * p.y)
   }
 
 }

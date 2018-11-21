@@ -55,16 +55,16 @@ object CityProtocol extends DefaultJsonProtocol {
       * @return a [[City]] representation of the given JSON object.
       */
     def read(value: JsValue) = value match {
-      case jsObject: JsObject => jsObject.fields.toVector match {
+      case jsObject: JsObject => jsObject.fields.toVector.sortBy(pair => pair._1) match {
         case Vector(
+          ("coordinates", JsArray(locationVector)),
+          ("countryCode", JsString(countryCode)),
+          ("distance", JsNumber(distance)),
+          ("fullName", JsString(fullName)),
           ("id", JsNumber(id)),
           ("name", JsString(name)),
-          ("stateProvince", JsString(stateProvince)),
-          ("fullName", JsString(fullName)),
-          ("countryCode", JsString(countryCode)),
-          ("coordinates", JsArray(locationVector)),
-          ("distance", JsNumber(distance)),
           ("score", JsNumber(score)),
+          ("stateProvince", JsString(stateProvince))
         ) => Try(
           new City(id.intValue(), name, stateProvince, fullName, countryCode,
             locationVector.map(_.asInstanceOf[JsNumber].value.doubleValue()).toPointOpt.get,
