@@ -1,5 +1,7 @@
 # What's done
 
+See also: https://eje211.github.io/coveo/
+
 ## Platform
 
 The easiest platform would have been Tornado. Tornado would have worked perfectly and would have taken a tenth of the
