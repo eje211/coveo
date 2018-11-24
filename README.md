@@ -1,6 +1,41 @@
-# What's done
+# Usage
 
-See also: https://eje211.github.io/coveo/
+This API returns a series of location suggestions based on a given string and a given starting point, ranked by similarity to the given string and
+to the proximity to the starting point.
+
+Online address of the API: http://ec2-13-58-187-95.us-east-2.compute.amazonaws.com/suggestions
+
+Example usage:
+
+    http://ec2-13-58-187-95.us-east-2.compute.amazonaws.com/suggestions?locationName=oak&startPoint=-142.25257110595703,31.057979583740234&limit=100&fuzzy=true
+
+GET parameters:
+
+* __locationName__: Mandatory. Find locations containing names similar to this string.
+* __startPoint__: Mandatory. Find locations close to this start location.
+* __limit__: Defaults to `20`. Maximum number of results.
+* __fuzzy__: Defaults to `true`. Whether the database should perform a fuzzy search on the given string.
+
+Returns a list of JSON objects with the following fields:
+
+* __id__: {integer} A unique, permanent ID for this location. Example: 5378566
+* __coordinates__: {number array} \[longitude, latitude\] coordinates.
+Example: \[-121.71244812011719,37.99742126464844\] for 121.71244812011719 W and 37.99742126464844 N.
+* __name__: {string} The name of this location. Example: "Oakley"
+* __stateProvince__: {string} The two-letter code of the state for this location, if it is in the United
+States of for its province if it is in Canada. Example: "CA" for California.
+* __fullName__: {fields} The combination of she previous two fields. Example: "Oakley, CA"
+* __countryCode__: A two-letter code for the country associated with this location: "US" or "CA".
+* __distance__: {number} The distance between this location and the supplied startPoint. Example: 21.680694248943052
+* __score__: {number} An arbitrary number that that classifies this result in comparison to all the other results
+ found for this search. The further away from this location, or the more different from the given string, the
+ lower the score will be. The score is in proportion to the other results and is always between 0 and 1.<br/>
+ Example: 0.9618250785280154. This would indicate that most of the other results have less similar names, or are
+ further away from the start point, or both.
+
+ See also the code API at https://eje211.github.io/coveo/.
+
+# What's done
 
 ## Platform
 

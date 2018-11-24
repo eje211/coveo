@@ -8,13 +8,13 @@ import org.apache.logging.log4j.scala.Logging
 import scala.util.{ Failure, Success, Try }
 
 /**
-  * A singleton for the [[PostgresConnection]] trait, which can otherwise be overridden.
-  */
+ * A singleton for the [[PostgresConnection]] trait, which can otherwise be overridden.
+ */
 object DatabaseConnection extends PostgresConnection
 
 /**
-  * All the methods to communicate with the database.
-  */
+ * All the methods to communicate with the database.
+ */
 trait PostgresConnection extends DatabaseHelpers with PGPoint with Logging {
   import slick.jdbc.GetResult
   import slick.jdbc.PostgresProfile.api._
@@ -28,8 +28,8 @@ trait PostgresConnection extends DatabaseHelpers with PGPoint with Logging {
   val dbDriver = ServicesRegistry.conf("main").getString("database.driver")
 
   /**
-    * Connection to the PostgreSQL database based on the configuration file.
-    */
+   * Connection to the PostgreSQL database based on the configuration file.
+   */
   val db: DatabaseDef = Try(Database.forURL(dbUrl, driver = dbDriver)) match {
     case Failure(exception: Throwable) =>
       logger.error(s"Could not connect to database: $dbUrl with driver $dbDriver.")

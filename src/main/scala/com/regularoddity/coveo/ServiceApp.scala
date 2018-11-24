@@ -86,15 +86,15 @@ class ServerApplication @Inject() (override val config: Configuration) extends S
 }
 
 /**
-  * A registry of running services and configurations.
-  */
+ * A registry of running services and configurations.
+ */
 object ServicesRegistry {
   /**
-    * A registry of running services.
-    */
+   * A registry of running services.
+   */
   val services = new ServicesMap()
   /**
-    * A registry of running configurations.
-    */
+   * A registry of running configurations.
+   */
   val conf = new ConfMap()
 }

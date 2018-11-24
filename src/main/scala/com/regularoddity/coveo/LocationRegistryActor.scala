@@ -7,8 +7,8 @@ import org.postgresql.geometric.PGpoint
 import scala.concurrent.ExecutionContext
 
 /**
-  * Companion object for the [[LocationRegistryActor]].
-  */
+ * Companion object for the [[LocationRegistryActor]].
+ */
 object LocationRegistryActor {
   /**
    * Send a message to the [[LocationRegistryActor]] to query [[City]] objects from the database based on the given
@@ -25,8 +25,8 @@ object LocationRegistryActor {
 }
 
 /**
-  * Registry for receiving messages to forward to the location service.
-  */
+ * Registry for receiving messages to forward to the location service.
+ */
 class LocationRegistryActor extends Actor with ActorLogging {
   import akka.pattern.pipe
   import scala.concurrent.duration._
