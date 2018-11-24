@@ -3,7 +3,7 @@ package com.regularoddity.coveo
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.{ Matchers, WordSpec }
 
-class CityRoutesSpec extends WordSpec with Matchers with ScalatestRouteTest with JsonSupport {
+class LocationRoutesSpec extends WordSpec with Matchers with ScalatestRouteTest with JsonSupport {
   import scala.collection.mutable
   import scala.collection.parallel.ParSeq
   import PGPoint._

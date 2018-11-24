@@ -2,22 +2,43 @@ package com.regularoddity.coveo
 
 import akka.actor.ActorSystem
 import org.postgresql.geometric.PGpoint
+import slick.jdbc.PostgresProfile.backend.DatabaseDef
+import org.apache.logging.log4j.scala.Logging
 
+import scala.util.{ Failure, Success, Try }
+
+/**
+  * A singleton for the [[PostgresConnection]] trait, which can otherwise be overridden.
+  */
 object DatabaseConnection extends PostgresConnection
 
-trait PostgresConnection extends DatabaseHelpers with PGPoint {
+/**
+  * All the methods to communicate with the database.
+  */
+trait PostgresConnection extends DatabaseHelpers with PGPoint with Logging {
   import slick.jdbc.GetResult
   import slick.jdbc.PostgresProfile.api._
   import PGPoint._
 
-  implicit val ExecutionContext = ActorSystem(AppConfiguration().getString("actor.system")).dispatcher
+  implicit val ExecutionContext = ActorSystem(ServicesRegistry.conf("main").getString("actor.system")).dispatcher
 
   implicit val PGpointType = new PointType()
 
-  val db = Database.forURL(
-    AppConfiguration().getString("database.postgres_url"),
-    driver = AppConfiguration().getString("database.driver")
-  )
+  val dbUrl = ServicesRegistry.conf("main").getString("database.postgres_url")
+  val dbDriver = ServicesRegistry.conf("main").getString("database.driver")
+
+  /**
+    * Connection to the PostgreSQL database based on the configuration file.
+    */
+  val db: DatabaseDef = Try(Database.forURL(dbUrl, driver = dbDriver)) match {
+    case Failure(exception: Throwable) =>
+      logger.error(s"Could not connect to database: $dbUrl with driver $dbDriver.")
+      System.exit(1)
+      throw new Exception(s"Could not connect to database: $dbUrl with driver $dbDriver.")
+    case Success(value: DatabaseDef) =>
+      logger.trace("Database connected.")
+      value
+  }
 
   /**
    * A representation of the type of the table `cities_v` in the database.
@@ -124,8 +145,8 @@ trait PostgresConnection extends DatabaseHelpers with PGPoint {
          |  cities_v
          |JOIN (
          |  SELECT
-         |    MAX(levenshtein(full_name, $locationStr)) AS max_score,
-         |    MIN(levenshtein(full_name, $locationStr)) as min_score,
+         |    MAX(levenshtein(full_name, $location)) AS max_score,
+         |    MIN(levenshtein(full_name, $location)) as min_score,
          |    MIN($pointValue::point <-> location) as min_distance,
          |    MAX($pointValue::point <-> location) as max_distance
          |  FROM
@@ -139,7 +160,7 @@ trait PostgresConnection extends DatabaseHelpers with PGPoint {
          |JOIN LATERAL (
          |  SELECT
          |    id,
-         |    levenshtein(full_name, $locationStr) AS score,
+         |    levenshtein(full_name, $location) AS score,
          |    $pointValue::point <-> location as distance
          |  FROM
          |    cities_v

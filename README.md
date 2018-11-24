@@ -1,6 +1,6 @@
+# What's done
 
-
-# Platform
+## Platform
 
 The easiest platform would have been Tornado. Tornado would have worked perfectly and would have taken a tenth of the
 time to develop. However, after telling the team that, if it were up to me, I'd use Scala more often and that I only
@@ -11,7 +11,7 @@ services is Akka HTTP. I thought that Akka HTTP could not be very complicated, c
 I was right. It is not very complicated. But it was still some extra software to learn. Still, to its credit, the Akka
 documentation is very good.
 
-# Database
+## Database
 
 There were several reasons why PostgreSQL was my database of choice here. If better geographical accuracy were
 necessary, PostGIS would be one, but even before that, its native use of geometric types is already a reason, its
@@ -23,7 +23,7 @@ will fit the existing table. The replacing the data in the existing table will a
 trust that the caching will make that conversion efficient: none of that data ever changes and Postgres is known for its
 efficiency.
 
-# ORM
+## ORM
 
 I made the most mistakes in my ORM selection. I first selected Squeryl that plain did not work. Then, I tried
 sacalikejdbc, that I did get to work but that posed a huge problem. It is synchronous. That means I could not call it
@@ -42,7 +42,7 @@ fantastic, just of the way it's documented.
 Slick, rather than returning data structures, returns futures, which can then be consumed asynchronously by Akka actors.
 That means that they can be safely called by actors, solving the problem posed by other ORMs.
 
-# Score
+## Score
 
 For the score, the main goal was to remember that the end consumer of the score would be people, not machines.
 I remember being at a conference, Indiecade, and hearing about how mathematical accuracy does not always work wih
@@ -90,3 +90,67 @@ enough for the inputs I tested with.
 Finally, at one point, I attempted a geometric mean, the square root of the product of both scores. But the results at
 top just felt a bit too high. Just leaving the product of both scores seemed to give a score that felt better.
 
+## Dependency injection
+
+It might not have been completely necessary, but I really wanted to try using Guice from scratch. I'd never done that.
+It really helped me get a better understanding of it. I'd using Guice through other frameworks that used it, but most
+of the setting up of Guice had been done for me. Not this time. Akka-HTTP does not require Guice at all.
+
+The use of Guice is not completely absurd here: one might want to implement the configuration interface in a different
+way, depending on the use case. In fact, this is what the unit test suite does. (Even though in this specific case,
+it would also have worked without the dependency injection.)
+
+## Logging
+
+Originally, there was no logging, but as soon as the service was running on the server, it became clear that having
+it run without even a basic logging system was not acceptable, so I configured a basic log4j and started logging a
+few things. sbt-native-packager (see below) creates the directories for the log files anyway, so I might as well use
+them.
+
+# WHat remains to be done
+
+## Configuration
+
+The configuration system is crude at best. The thought behind that is that in real life, there would most likely be a
+centralized configuration system for all or most services. It does not make sense that each service be configured in a
+different way. So this service does not go far in setting up its own configuration system.
+
+# Deployment
+
+## Binaries
+
+Given the nature of Akka-HTTP, there are many ways of deploying this service. The one I chose is to use the
+sbt-native-packager. Since AWS is Red Hat-based, building to RPM made sense. If I had a better idea of the overall
+structure of the system, the Docker plugin might make more sense.) The RPM build command is the following:
+
+    sbt rpm:packageBin
+
+It requires the RNM packages to be installed on the system. They're available on any Unix system, including on
+macOS through Homebrew, which is what I used.
+
+As mentioned before, configuration is very crude. The RPM will create a user for this service but not user
+directory. That means that it will be *necessary* to create a system configuration file. The address currently
+set in the source is:
+
+    /etc/coveolocationservice.conf
+
+But it's trivial to add another: just add a new string to the list. Another way of configuring the package, of
+course, is to modify the configuration file in the resource folder, but that runs the danger of putting passwords
+in version control, which is never good.
+
+## Database
+
+The database content is included in version control. It should be easy to install on any recent version of
+PostgreSQL. The version currently deployed uses RDS. One of way of deploying the data would be:
+
+    psql databasename < sqlcontent.sql
+
+The extensions that this data uses are included by default within Postgres. Any warning or error about them
+can be safely ignored.
+
+## API
+
+There is an automatically generated API. It's included in the source. I'm sure it's not finished. I wish I
+could have done more with it. Uncommented code always comes back to bite you in the end. But it got so
+fascinated in learning Akka-HTTP, Slack and Guice from scratch that it would not have been reasonable to
+spend even more time polishing comments for each function.
